@@ -1,15 +1,15 @@
 package me.sreejithnair.linkup.post_service.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import me.sreejithnair.linkup.post_service.dto.request.PostRequestDto;
 import me.sreejithnair.linkup.post_service.dto.response.PostResponseDto;
 import me.sreejithnair.linkup.post_service.service.PostService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static me.sreejithnair.linkup.post_service.auth.UserContextHolder.getCurrentUserId;
 
 @RestController
 @RequestMapping("/")
@@ -19,11 +19,8 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping
-    public ResponseEntity<PostResponseDto> createPost(
-            @RequestBody PostRequestDto postRequestDto,
-            HttpServletRequest httpServletRequest
-    ) {
-        Long userId = 1L;
+    public ResponseEntity<PostResponseDto> createPost(@RequestBody PostRequestDto postRequestDto) {
+        Long userId = getCurrentUserId();
         PostResponseDto postResponseDto = postService.createPost(postRequestDto, userId);
         return new ResponseEntity<>(postResponseDto, HttpStatus.CREATED);
     }
@@ -41,11 +38,10 @@ public class PostController {
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
-            @RequestParam(defaultValue = "") String search,
-            HttpServletRequest httpServletRequest
+            @RequestParam(defaultValue = "") String search
     ) {
         if (userId == 0L) {
-            userId = 1L; // Extract id from header
+            userId = getCurrentUserId();
         }
 
         Page<PostResponseDto> userPosts = postService.getUserPosts(

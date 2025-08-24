@@ -1,7 +1,9 @@
 package me.sreejithnair.linkup.post_service.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import me.sreejithnair.linkup.post_service.client.ConnectionsClient;
 import me.sreejithnair.linkup.post_service.dto.request.PostRequestDto;
+import me.sreejithnair.linkup.post_service.dto.response.PersonResponseDto;
 import me.sreejithnair.linkup.post_service.dto.response.PostResponseDto;
 import me.sreejithnair.linkup.post_service.entity.Post;
 import me.sreejithnair.linkup.post_service.exception.ResourceNotFoundException;
@@ -12,14 +14,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static me.sreejithnair.linkup.post_service.util.Helper.generatePageable;
 
 @Service
 @RequiredArgsConstructor
-public class PostServiceImpl implements PostService {
+public class        PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final ModelMapper modelMapper;
+    private final ConnectionsClient connectionsClient;
 
     @Override
     public PostResponseDto createPost(PostRequestDto postRequestDto, Long userId) {
@@ -49,6 +54,8 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository
                         .findById(postId)
                         .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
+
+        List<PersonResponseDto> firstConnections = connectionsClient.getFirstConnections(post.getUserId());
 
         return modelMapper.map(post, PostResponseDto.class);
     }
