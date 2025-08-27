@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import static me.sreejithnair.linkup.post_service.auth.UserContextHolder.getCurrentUserId;
 
 @RestController
-@RequestMapping("/")
+@RequestMapping
 @RequiredArgsConstructor
 public class PostController {
 

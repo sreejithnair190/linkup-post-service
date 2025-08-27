@@ -15,7 +15,7 @@ public class UserInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String userId = request.getHeader("X-User-Id");
-        if (Objects.equals(userId, "")) {
+        if (!Objects.equals(userId, "")) {
             UserContextHolder.setCurrentUserId(Long.valueOf(userId));
         }
         return HandlerInterceptor.super.preHandle(request, response, handler);

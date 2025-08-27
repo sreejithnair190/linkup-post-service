@@ -2,20 +2,26 @@ package me.sreejithnair.linkup.post_service.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import me.sreejithnair.linkup.post_service.client.ConnectionsClient;
+import me.sreejithnair.linkup.post_service.constants.Events;
 import me.sreejithnair.linkup.post_service.dto.request.PostRequestDto;
 import me.sreejithnair.linkup.post_service.dto.response.PersonResponseDto;
 import me.sreejithnair.linkup.post_service.dto.response.PostResponseDto;
 import me.sreejithnair.linkup.post_service.entity.Post;
+import me.sreejithnair.linkup.post_service.event.PostCreatedEvent;
 import me.sreejithnair.linkup.post_service.exception.ResourceNotFoundException;
 import me.sreejithnair.linkup.post_service.repository.PostRepository;
 import me.sreejithnair.linkup.post_service.service.PostService;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
+import static me.sreejithnair.linkup.post_service.constants.Events.POST_CREATED_EVENT;
 import static me.sreejithnair.linkup.post_service.util.Helper.generatePageable;
 
 @Service
@@ -25,6 +31,7 @@ public class        PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final ModelMapper modelMapper;
     private final ConnectionsClient connectionsClient;
+    private final KafkaTemplate<Long, PostCreatedEvent> kafkaTemplate;
 
     @Override
     public PostResponseDto createPost(PostRequestDto postRequestDto, Long userId) {
@@ -32,6 +39,15 @@ public class        PostServiceImpl implements PostService {
         newPost.setUserId(userId);
 
         Post savedPost = postRepository.save(newPost);
+
+        PostCreatedEvent postCreatedEvent = PostCreatedEvent.builder()
+                .postId(savedPost.getId())
+                .creatorId(savedPost.getUserId())
+                .content(savedPost.getContent())
+                .build();
+
+        CompletableFuture<SendResult<Long, PostCreatedEvent>> test =
+        kafkaTemplate.send(POST_CREATED_EVENT, savedPost.getId(), postCreatedEvent);
 
         return modelMapper.map(savedPost, PostResponseDto.class);
     }
